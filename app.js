@@ -21,19 +21,17 @@ var sendtweet = function (text) {
 	};
 
 var searchimages = function (tag, cb) {
-		console.log('imgtag: '+tag);
-		var firstquery = true;
+
+		var firstquery = true;	//магия какая то, но колбэк of twit.search вызывается два раза
 		twit.search('#'+tag+' filter:images', function(data) {
-			console.log(data)
+
 			if(firstquery)
 			{
 				firstquery = false;
-				console.log('restag: '+tag)			
+
 				var imageslist = [],
 					statuses_length = data && data.statuses?data.statuses.length:0;
-				
-				console.log('statuses_length: '+statuses_length);
-				// console.log(util.inspect(data.statuses))
+
 				if(statuses_length > 0)
 				{
 					for(var i = 0; i < statuses_length; i++)
@@ -47,19 +45,10 @@ var searchimages = function (tag, cb) {
 							imageslist.push(imageurl);
 						}
 					}
-					// data.statuses.forEach(function(status, index) {
-						// if((statuses_length-1) === index)
-						// {
-						// 	console.log(imageslist)
-						// 	callback(imageslist);
-						// }
-					// });
-				}
-				// else
-				// {
-					console.log(util.inspect(imageslist))
-					cb(imageslist);
-				// }
+
+				};
+
+				cb(imageslist);
 			}
 		});
 	};
@@ -70,8 +59,6 @@ var static = require('node-static');
 var file = new static.Server('./public');
 
 var server = http.createServer(function (request, response) {
-
-    // console.log(request.headers);
 
     request.addListener('end', function () {
 
@@ -102,57 +89,13 @@ var server = http.createServer(function (request, response) {
 var sockets = io.listen(server)
 
 sockets.on('connection', function (socket) {
-	console.log('connection');
+
   	socket.on('sendtweet', function (data) {
     	sendtweet(data.text);
   	});
   	socket.on('searchimagesbytag', function (data) {
-    	searchimages(data.tag, function(imageslist2) {
-    		console.log(imageslist2)
-    		socket.emit('founded:images', {list: imageslist2});
+    	searchimages(data.tag, function(imageslist) {
+    		socket.emit('founded:images', {list: imageslist});
     	});
   	});
 });
-
-/*var app = require('http').createServer(handler)
-var io = require('socket.io')(app);
-var static = require('node-static');
-var file = new static.Server('./public');
-
-app.on('error', function (error) {
-    console.log(error);
-}).listen(3000);
-
-io.on('connection', function (socket) {
-  	// socket.emit('news', { hello: 'world' });
-  	socket.on('sendtweet', function (data) {
-    	console.log(data);
-  	});
-});*/
-
-
-
-/*
-var sys = require('sys')
-var exec = require('child_process').exec;
-function puts(error, stdout, stderr) { sys.puts(stdout) }
-*/
-
-/*
-twit
-    .verifyCredentials(function(data) {
-        console.log(util.inspect(data));
-    })
-    .updateStatus('Test tweet from node-twitter/' + twitter.VERSION,
-        function(data) {
-            console.log(util.inspect(data));
-        }
-    );
-
-twit.search('#бомба filter:images', function(data) {
-	data.statuses.forEach(function(status) {
-		// console.log(util.inspect(status.entities.media[0].media_url));
-		exec("google-chrome "+status.entities.media[0].media_url, puts);
-	});
-});
-*/
